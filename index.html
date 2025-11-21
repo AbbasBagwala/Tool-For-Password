@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html>
+<head>
+<link rel="icon" type="image/png" href="logo.png">
+<title>Perfect Password Tool</title>
+
+<style>
+    body {
+        font-family: Arial;
+        background: #0a0a0a;
+        color: white;
+        padding: 20px;
+    }
+    .box {
+        background: #111;
+        padding: 20px;
+        border-radius: 10px;
+        width: 360px;
+        margin: auto;
+        box-shadow: 0 0 10px #00eaff; /* glow reduced */
+    }
+    input, button {
+        padding: 10px;
+        margin: 8px 0;
+        border-radius: 5px;
+        border: none;
+    }
+    input[type="text"], input[type="password"] {
+        width: 100%;
+    }
+    #length {
+        width: 90px; /* smaller length box */
+    }
+    button {
+        width: 100%;
+        background: #00eaff;
+        font-weight: bold;
+        cursor: pointer;
+    }
+    #toggleGen, #toggleUser, .iconBtn {
+        width: auto;
+        padding: 5px 10px;
+        margin-left: 5px;
+        cursor: pointer;
+        background: #222;
+        border: 1px solid #00eaff;
+        border-radius: 5px;
+        font-size: 12px;
+        color: #00eaff;
+    }
+    #strengthBar {
+        height: 10px;
+        width: 100%;
+        background: #333;
+        margin: 10px 0;
+        border-radius: 5px;
+        overflow: hidden;
+    }
+    #strengthFill {
+        height: 10px;
+        width: 0%;
+        background: red;
+        transition: 0.3s;
+    }
+</style>
+
+</head>
+<body>
+
+<div class="box">
+    <h2>Perfect Password Tool</h2>
+
+    <!-- GENERATED PASSWORD + SHOW/HIDE + COPY -->
+    <div style="display:flex;align-items:center;gap:5px;">
+        <input type="password" id="password" placeholder="Generated Password">
+        <button id="toggleGen" onclick="toggleVisibility('password','toggleGen')">SHOW</button>
+        <button class="iconBtn" onclick="copyPassword('password')">COPY</button>
+    </div>
+
+    <!-- OPTIONS -->
+    <label>Password Length:</label><br>
+    <input type="number" id="length" min="4" max="30" value="12"><br>
+
+    <label><input type="checkbox" id="upper" checked> Uppercase (A-Z)</label><br>
+    <label><input type="checkbox" id="lower" checked> Lowercase (a-z)</label><br>
+    <label><input type="checkbox" id="nums" checked> Numbers (0-9)</label><br>
+    <label><input type="checkbox" id="syms" checked> Symbols (!@#$)</label><br>
+
+    <button onclick="generatePassword()">Generate Password</button>
+
+    <button onclick="downloadPassword()">Download Password</button>
+
+    <br><hr><br>
+
+    <h3>Check Your Own Password</h3>
+
+    <!-- USER PASSWORD + SHOW/HIDE + COPY -->
+    <div style="display:flex;align-items:center;gap:5px;">
+        <input type="password" id="userPassword" placeholder="Type your password..." oninput="checkUserPassword()">
+        <button id="toggleUser" onclick="toggleVisibility('userPassword','toggleUser')">SHOW</button>
+        <button class="iconBtn" onclick="copyPassword('userPassword')">COPY</button>
+    </div>
+
+    <!-- STRENGTH BAR -->
+    <div id="strengthBar"><div id="strengthFill"></div></div>
+
+    <p id="strengthText">Strength: -</p>
+    <p id="suggestions" style="color:#00eaff; font-size:14px;">Suggestions will appear here...</p>
+</div>
+
+<script>
+
+// Toggle Show/Hide
+function toggleVisibility(fieldId, btnId) {
+    let field = document.getElementById(fieldId);
+    let btn = document.getElementById(btnId);
+
+    if (field.type === "password") {
+        field.type = "text";
+        btn.innerText = "HIDE";
+    } else {
+        field.type = "password";
+        btn.innerText = "SHOW";
+    }
+}
+
+// Copy Function
+function copyPassword(id) {
+    let field = document.getElementById(id);
+    field.select();
+    navigator.clipboard.writeText(field.value);
+    alert("Copied!");
+}
+
+// Generate Password
+function generatePassword() {
+    let length = document.getElementById("length").value;
+
+    let chars = "";
+    if (document.getElementById("upper").checked) chars += "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    if (document.getElementById("lower").checked) chars += "abcdefghijklmnopqrstuvwxyz";
+    if (document.getElementById("nums").checked) chars += "0123456789";
+    if (document.getElementById("syms").checked) chars += "!@#$%^&*()_+{}[]<>?/|";
+
+    if (chars.length === 0) {
+        alert("Select at least one character type!");
+        return;
+    }
+
+    let pass = "";
+    for (let i = 0; i < length; i++) {
+        pass += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+
+    document.getElementById("password").value = pass;
+    analyzeStrength(pass);
+}
+
+// Download Password as File
+function downloadPassword() {
+    let pass = document.getElementById("password").value;
+
+    if (!pass) {
+        alert("Generate a password first!");
+        return;
+    }
+
+    let blob = new Blob([pass], { type: "text/plain" });
+    let link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "password.txt";
+    link.click();
+}
+
+// User Password Input
+function checkUserPassword() {
+    let pass = document.getElementById("userPassword").value;
+    analyzeStrength(pass);
+}
+
+// Strength Analyzer
+function analyzeStrength(pass) {
+
+    let strengthFill = document.getElementById("strengthFill");
+    let strengthText = document.getElementById("strengthText");
+    let suggestions = document.getElementById("suggestions");
+
+    let score = 0;
+    let suggestionList = [];
+
+    if (pass.length > 0) {
+        if (pass.length >= 8) score++;
+        else suggestionList.push("Increase password length (8+ recommended)");
+
+        if (/[A-Z]/.test(pass)) score++;
+        else suggestionList.push("Add uppercase letters");
+
+        if (/[a-z]/.test(pass)) score++;
+        else suggestionList.push("Add lowercase letters");
+
+        if (/[0-9]/.test(pass)) score++;
+        else suggestionList.push("Add numbers");
+
+        if (/[^A-Za-z0-9]/.test(pass)) score++;
+        else suggestionList.push("Include special characters");
+
+        if (/123|abc|password|qwerty/i.test(pass))
+            suggestionList.push("Avoid common patterns");
+    }
+
+    let percentage = (score / 5) * 100;
+    strengthFill.style.width = percentage + "%";
+
+    if (percentage < 40) strengthFill.style.background = "red";
+    else if (percentage < 70) strengthFill.style.background = "orange";
+    else strengthFill.style.background = "lime";
+
+    let levels = ["Very Weak", "Weak", "Medium", "Strong", "Very Strong"];
+    strengthText.innerHTML = "Strength: " + levels[score];
+
+    if (pass.length === 0) {
+        suggestions.innerHTML = "Type a password to check strength.";
+        return;
+    }
+
+    if (suggestionList.length === 0) {
+        suggestions.innerHTML = "👍 This is a very strong password!";
+    } else {
+        suggestions.innerHTML = "Suggestions:<br>• " + suggestionList.join("<br>• ");
+    }
+}
+
+</script>
+
+</body>
+</html>
