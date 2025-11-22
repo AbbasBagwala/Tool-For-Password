@@ -1,15 +1,1 @@
-{
-  "name": "Perfect Password Tool",
-  "short_name": "Password Tool",
-  "start_url": "index.html",
-  "display": "standalone",
-  "background_color": "#000000",
-  "theme_color": "#00eaff",
-  "icons": [
-    {
-      "src": "logo.png",
-      "sizes": "512x512",
-      "type": "image/png"
-    }
-  ]
-}
+
